@@ -307,6 +307,42 @@
         font-size: 24px;
       }
     }
+
+    /* =========================
+       DETAIL SECTIONS
+    ========================= */
+
+    .section-title {
+      padding: 6px 25px 12px;
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: #2563eb;
+    }
+
+    .flag-caption {
+      font-size: 13px;
+      color: #6b7280;
+      margin-top: 8px;
+      line-height: 1.5;
+    }
+
+    .hero-line {
+      color: #374151;
+      font-size: 15px;
+      margin-bottom: 6px;
+    }
+
+    .detail-item a {
+      color: #2563eb;
+      text-decoration: none;
+    }
+
+    .detail-item a:hover {
+      text-decoration: underline;
+    }
+
   </style>
 </head>
 
@@ -554,6 +590,115 @@
 
 
     /* ==========================================
+       SMALL HELPERS
+    ========================================== */
+
+    function esc(value) {
+
+      return String(value).replace(/[&<>"']/g, ch => ({
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;",
+        '"': "&quot;",
+        "'": "&#39;"
+      }[ch]));
+
+    }
+
+    function isEmpty(value) {
+
+      return (
+        value === null ||
+        value === undefined ||
+        (typeof value === "string" &&
+          (value.trim() === "" || value.trim() === "—")) ||
+        (Array.isArray(value) && value.length === 0)
+      );
+
+    }
+
+    function cap(text) {
+
+      return text
+        ? text.charAt(0).toUpperCase() + text.slice(1)
+        : "";
+
+    }
+
+    function formatNumber(number) {
+
+      return typeof number === "number"
+        ? number.toLocaleString()
+        : "";
+
+    }
+
+    function unique(array) {
+
+      return [...new Set(array.filter(Boolean))];
+
+    }
+
+    const MONTHS = [
+      "January", "February", "March", "April",
+      "May", "June", "July", "August",
+      "September", "October", "November", "December"
+    ];
+
+    function monthDay(month, day) {
+
+      if (!month || !day || !MONTHS[month - 1]) {
+        return "";
+      }
+
+      return `${MONTHS[month - 1]} ${day}`;
+
+    }
+
+    /* One info box. Returns "" when there is no data. */
+
+    function item(label, value) {
+
+      if (isEmpty(value)) {
+        return "";
+      }
+
+      return `
+        <div class="detail-item">
+          <strong>${label}</strong>
+          <span>${value}</span>
+        </div>
+      `;
+
+    }
+
+    /* One titled section. Returns "" when every box is empty. */
+
+    function section(title, items) {
+
+      const rows = items.filter(Boolean).join("");
+
+      if (!rows) {
+        return "";
+      }
+
+      return `
+        <h3 class="section-title">${title}</h3>
+        <div class="details-grid">${rows}</div>
+      `;
+
+    }
+
+    function link(url, text) {
+
+      return /^https?:\/\//i.test(url || "")
+        ? `<a href="${esc(url)}" target="_blank" rel="noopener noreferrer">${text}</a>`
+        : "";
+
+    }
+
+
+    /* ==========================================
        RENDER COUNTRY CARDS
     ========================================== */
 
@@ -562,9 +707,7 @@
       visibleList = list;
 
       const container =
-        document.getElementById(
-          "countriesContainer"
-        );
+        document.getElementById("countriesContainer");
 
       if (!list.length) {
 
@@ -577,13 +720,11 @@
         return;
       }
 
-
       container.innerHTML =
         list.map((country, index) => {
 
           const name =
-            country.names?.common ||
-            "Unknown";
+            country.names?.common || "Unknown";
 
           const flag =
             country.flag?.url_png ||
@@ -591,16 +732,23 @@
             "";
 
           const capital =
-            country.capitals?.[0]?.name ||
-            "—";
+            (country.capitals || [])
+              .map(c => c.name)
+              .filter(Boolean)[0] || "";
 
-          const region =
-            country.region ||
-            "—";
-
-          const code =
-            country.codes?.alpha_2 ||
-            "—";
+          const rows = [
+            ["ISO", country.codes?.alpha_2],
+            ["Capital", capital],
+            ["Region", country.region]
+          ]
+            .filter(([, value]) => !isEmpty(value))
+            .map(([label, value]) => `
+              <div class="meta-row">
+                <span class="meta-label">${label}</span>
+                <span class="meta-value">${esc(value)}</span>
+              </div>
+            `)
+            .join("");
 
           return `
 
@@ -610,60 +758,21 @@
             >
 
               <div class="flag-container">
-
                 ${
                   flag
-                  ? `<img
-                      src="${flag}"
-                      alt="${name} flag"
-                    >`
-                  : `<span>${country.flag?.emoji || ""}</span>`
+                    ? `<img src="${esc(flag)}" alt="${esc(name)} flag">`
+                    : ""
                 }
-
               </div>
-
 
               <div class="country-content">
 
                 <div class="country-name">
-                  ${name}
+                  ${esc(name)}
                 </div>
 
-
                 <div class="country-meta">
-
-                  <div class="meta-row">
-                    <span class="meta-label">
-                      ISO
-                    </span>
-
-                    <span class="meta-value">
-                      ${code}
-                    </span>
-                  </div>
-
-
-                  <div class="meta-row">
-                    <span class="meta-label">
-                      Capital
-                    </span>
-
-                    <span class="meta-value">
-                      ${capital}
-                    </span>
-                  </div>
-
-
-                  <div class="meta-row">
-                    <span class="meta-label">
-                      Region
-                    </span>
-
-                    <span class="meta-value">
-                      ${region}
-                    </span>
-                  </div>
-
+                  ${rows}
                 </div>
 
               </div>
@@ -679,90 +788,204 @@
 
     /* ==========================================
        COUNTRY DETAILS
+       (boxes and sections with no data are removed)
     ========================================== */
 
     function openCountry(index) {
 
-      const country = visibleList[index];
+      const c = visibleList[index];
 
-      if (!country) {
+      if (!c) {
         return;
       }
 
       const modal =
-        document.getElementById(
-          "countryModal"
-        );
+        document.getElementById("countryModal");
 
       const details =
-        document.getElementById(
-          "countryDetails"
-        );
+        document.getElementById("countryDetails");
 
 
-      const name =
-        country.names?.common || "—";
+      /* ---- basic values ---- */
 
-      const officialName =
-        country.names?.official || "—";
+      const name = c.names?.common || "";
+      const official = c.names?.official || "";
 
       const flag =
-        country.flag?.url_png ||
-        country.flag?.url_svg ||
+        c.flag?.url_png ||
+        c.flag?.url_svg ||
         "";
 
-      const alpha2 =
-        country.codes?.alpha_2 || "—";
+      const capitals =
+        (c.capitals || [])
+          .map(x => x.name)
+          .filter(Boolean);
 
-      const alpha3 =
-        country.codes?.alpha_3 || "—";
+      const alsoKnownAs =
+        unique(c.names?.alternates || [])
+          .map(esc)
+          .join(", ");
 
-      const numeric =
-        country.codes?.ccn3 || "—";
+      const nativeNames =
+        unique(
+          Object.values(c.names?.native || {})
+            .map(n =>
+              typeof n === "string"
+                ? n
+                : (n?.common || n?.official)
+            )
+        )
+          .slice(0, 6)
+          .map(esc)
+          .join("<br>");
 
-      const capital =
-        country.capitals
-          ?.map(c => c.name)
-          .join(", ") || "—";
+      const demonymRecord =
+        c.demonyms?.eng ||
+        Object.values(c.demonyms || {})[0] ||
+        null;
 
-      const region =
-        country.region || "—";
+      const demonym =
+        demonymRecord
+          ? (
+              demonymRecord.f &&
+              demonymRecord.f !== demonymRecord.m
+                ? `${demonymRecord.m} / ${demonymRecord.f}`
+                : (demonymRecord.m || "")
+            )
+          : "";
 
-      const subregion =
-        country.subregion || "—";
+
+      /* ---- status ---- */
+
+      const cl = c.classification || {};
+      const status = [];
+
+      if (cl.sovereign) {
+        status.push("Sovereign state");
+      }
+
+      if (cl.dependency) {
+        status.push(
+          "Dependent territory" +
+          (cl.dependency_type
+            ? ` (${cl.dependency_type.replace(/_/g, " ")})`
+            : "")
+        );
+      }
+
+      if (cl.un_observer) {
+        status.push("UN observer state");
+      }
+
+      if (cl.disputed) {
+        status.push("Disputed recognition");
+      }
+
+      const parentCode = c.parent?.alpha_3;
+
+      const parent =
+        parentCode
+          ? (
+              countries.find(x => x.codes?.alpha_3 === parentCode)
+                ?.names?.common || parentCode
+            )
+          : "";
+
+
+      /* ---- geography ---- */
+
+      const km = c.area?.kilometers;
+      const mi = c.area?.miles;
 
       const area =
-        country.area?.kilometers
-          ? `${country.area.kilometers.toLocaleString()} km²`
-          : "—";
+        km
+          ? `${formatNumber(km)} km²` +
+            (mi ? ` (${formatNumber(mi)} mi²)` : "")
+          : "";
 
-      const currency =
-        formatCurrencies(
-          country.currencies
+      const lat = c.coordinates?.lat;
+      const lng = c.coordinates?.lng;
+
+      const coordinates =
+        (typeof lat === "number" && typeof lng === "number")
+          ? `${lat.toFixed(2)}°, ${lng.toFixed(2)}°`
+          : "";
+
+      const borders =
+        (c.borders || [])
+          .map(code =>
+            countries.find(x => x.codes?.alpha_3 === code)
+              ?.names?.common || code
+          )
+          .map(esc)
+          .join(", ");
+
+      const landlocked =
+        c.landlocked === true
+          ? "Yes"
+          : c.landlocked === false
+            ? "No"
+            : "";
+
+
+      /* ---- everyday life ---- */
+
+      const nf = c.number_format || {};
+
+      const numberFormat =
+        nf.decimal_separator
+          ? `1${nf.thousands_separator || ""}234` +
+            `${nf.thousands_separator || ""}567` +
+            `${nf.decimal_separator}89`
+          : "";
+
+      const dt = c.date || {};
+
+      const academicYear =
+        monthDay(
+          dt.academic_year_start?.month,
+          dt.academic_year_start?.day
         );
 
-      const callingCode =
-        country.calling_codes
-          ?.map(code => `+${code}`)
-          .join(", ") || "—";
-
-      const languages =
-        formatLanguages(
-          country.languages
+      const fiscalYear =
+        monthDay(
+          dt.fiscal_year_start?.government?.month,
+          dt.fiscal_year_start?.government?.day
         );
 
-      const timezones =
-        country.timezones
-          ?.join(", ") || "—";
 
-      const postalFormat =
-        country.postal_code?.format ||
-        "No postal code format available";
+      /* ---- memberships ---- */
 
-      const postalRegex =
-        country.postal_code?.regex ||
-        "—";
+      const MEMBERSHIP_LABELS = {
+        un: "United Nations",
+        eu: "European Union",
+        eurozone: "Eurozone",
+        schengen: "Schengen Area",
+        nato: "NATO",
+        commonwealth: "Commonwealth of Nations",
+        oecd: "OECD",
+        g7: "G7",
+        g20: "G20",
+        brics: "BRICS",
+        opec: "OPEC",
+        african_union: "African Union",
+        asean: "ASEAN",
+        arab_league: "Arab League"
+      };
 
+      const memberships =
+        Object.entries(MEMBERSHIP_LABELS)
+          .filter(([key]) => c.memberships?.[key] === true)
+          .map(([, label]) => label)
+          .join(", ");
+
+
+      /* ---- build the page ---- */
+
+      const heroLine =
+        [c.region, c.subregion]
+          .filter(Boolean)
+          .join(" · ");
 
       details.innerHTML = `
 
@@ -770,126 +993,94 @@
 
           ${
             flag
-            ? `
-              <img
-                class="detail-flag"
-                src="${flag}"
-                alt="${name} flag"
-              >
-            `
-            : `
-              <div class="detail-flag">
-                ${country.flag?.emoji || ""}
-              </div>
-            `
+              ? `<img class="detail-flag" src="${esc(flag)}" alt="${esc(name)} flag">`
+              : ""
           }
-
 
           <div>
 
-            <h1 class="detail-name">
-              ${name}
-            </h1>
+            <h1 class="detail-name">${esc(name)}</h1>
 
-            <p class="official-name">
-              ${officialName}
-            </p>
+            ${official ? `<p class="official-name">${esc(official)}</p>` : ""}
 
-            <p>
-              ${country.flag?.emoji || ""}
-              ${alpha2}
-            </p>
+            ${heroLine ? `<p class="hero-line">${esc(heroLine)}</p>` : ""}
+
+            ${
+              c.flag?.description
+                ? `<p class="flag-caption">${esc(c.flag.description)}</p>`
+                : ""
+            }
 
           </div>
 
         </div>
 
+        ${section("Overview", [
+          item("Native name", nativeNames),
+          item("Also known as", alsoKnownAs),
+          item("People are called", esc(demonym)),
+          item("Capital", capitals.map(esc).join(", ")),
+          item("Government type", esc(c.government_type || "")),
+          item("Status", status.map(esc).join(", ")),
+          item("Parent country", esc(parent))
+        ])}
 
-        <div class="details-grid">
+        ${section("Geography", [
+          item("Continent", (c.continents || []).map(esc).join(", ")),
+          item("Region", esc(c.region || "")),
+          item("Subregion", esc(c.subregion || "")),
+          item("Area", esc(area)),
+          item("Location (center)", esc(coordinates)),
+          item("Landlocked", landlocked),
+          item("Borders", borders),
+          item("Time zones", (c.timezones || []).map(esc).join(", "))
+        ])}
 
+        ${section("Codes", [
+          item("ISO Alpha-2", esc(c.codes?.alpha_2 || "")),
+          item("ISO Alpha-3", esc(c.codes?.alpha_3 || "")),
+          item("ISO Numeric", esc(c.codes?.ccn3 || "")),
+          item("FIPS", esc(c.codes?.fips || "")),
+          item("GEC", esc(c.codes?.gec || "")),
+          item("Olympic (IOC)", esc(c.codes?.cioc || "")),
+          item("FIFA", esc(c.codes?.fifa || ""))
+        ])}
 
-          <div class="detail-item">
-            <strong>ISO Alpha-2</strong>
-            <span>${alpha2}</span>
-          </div>
+        ${section("Communication & economy", [
+          item("Currency", formatCurrencies(c.currencies)),
+          item("Languages", formatLanguages(c.languages)),
+          item(
+            "Calling code",
+            (c.calling_codes || []).map(x => esc("+" + x)).join(", ")
+          ),
+          item("Internet domain", (c.tlds || []).map(esc).join(", ")),
+          item("Postal code format", esc(c.postal_code?.format || "")),
+          item("Postal code regex", esc(c.postal_code?.regex || ""))
+        ])}
 
+        ${section("Everyday life", [
+          item("Driving side", esc(cap(c.cars?.driving_side || ""))),
+          item("Vehicle plate code", (c.cars?.signs || []).map(esc).join(", ")),
+          item("Measurement system", esc(cap(c.units?.measurement_system || ""))),
+          item("Temperature scale", esc(c.units?.temperature_scale || "")),
+          item("Number format", esc(numberFormat)),
+          item("Week starts on", esc(cap(dt.start_of_week || ""))),
+          item("School year starts", esc(academicYear)),
+          item("Government fiscal year starts", esc(fiscalYear))
+        ])}
 
-          <div class="detail-item">
-            <strong>ISO Alpha-3</strong>
-            <span>${alpha3}</span>
-          </div>
+        ${section("Memberships", [
+          item("Member of", esc(memberships))
+        ])}
 
-
-          <div class="detail-item">
-            <strong>ISO Numeric</strong>
-            <span>${numeric}</span>
-          </div>
-
-
-          <div class="detail-item">
-            <strong>Capital</strong>
-            <span>${capital}</span>
-          </div>
-
-
-          <div class="detail-item">
-            <strong>Region</strong>
-            <span>${region}</span>
-          </div>
-
-
-          <div class="detail-item">
-            <strong>Subregion</strong>
-            <span>${subregion}</span>
-          </div>
-
-
-          <div class="detail-item">
-            <strong>Area</strong>
-            <span>${area}</span>
-          </div>
-
-
-          <div class="detail-item">
-            <strong>Currency</strong>
-            <span>${currency}</span>
-          </div>
-
-
-          <div class="detail-item">
-            <strong>Calling Code</strong>
-            <span>${callingCode}</span>
-          </div>
-
-
-          <div class="detail-item">
-            <strong>Languages</strong>
-            <span>${languages}</span>
-          </div>
-
-
-          <div class="detail-item">
-            <strong>Time Zones</strong>
-            <span>${timezones}</span>
-          </div>
-
-
-          <div class="detail-item">
-            <strong>Postal Code Format</strong>
-            <span>${postalFormat}</span>
-          </div>
-
-
-          <div class="detail-item">
-            <strong>Postal Code Regex</strong>
-            <span>${postalRegex}</span>
-          </div>
-
-
-        </div>
+        ${section("Links", [
+          item("Official website", link(c.links?.official, "Open ↗")),
+          item("Wikipedia", link(c.links?.wikipedia, "Open ↗")),
+          item("OpenStreetMap", link(c.links?.open_street_maps, "Open ↗")),
+          item("Google Maps", link(c.links?.google_maps, "Open ↗"))
+        ])}
 
       `;
-
 
       modal.classList.add("active");
 
@@ -903,23 +1094,46 @@
     function formatCurrencies(currencies) {
 
       if (!currencies) {
-        return "—";
+        return "";
       }
 
-      return Object.entries(currencies)
-        .map(([code, currency]) => {
+      const entries =
+        Array.isArray(currencies)
+          ? currencies.map(cur => ["", cur])
+          : Object.entries(currencies);
 
-          const name =
-            currency.name || "";
+      return entries
+        .map(([key, cur]) => {
+
+          if (typeof cur === "string") {
+            return esc(cur);
+          }
+
+          const name = cur?.name || "";
+
+          const code =
+            /^[A-Za-z]{3}$/.test(key)
+              ? key
+              : (
+                  cur?.code ||
+                  cur?.iso_code ||
+                  cur?.iso ||
+                  cur?.currency_code ||
+                  ""
+                );
 
           const symbol =
-            currency.symbol
-              ? ` (${currency.symbol})`
-              : "";
+            cur?.symbol ? ` (${cur.symbol})` : "";
 
-          return `${name} — ${code}${symbol}`;
+          const label =
+            name
+              ? name + (code ? ` — ${code}` : "")
+              : code;
+
+          return label ? esc(label + symbol) : "";
 
         })
+        .filter(Boolean)
         .join("<br>");
 
     }
@@ -932,33 +1146,19 @@
     function formatLanguages(languages) {
 
       if (!languages) {
-        return "—";
+        return "";
       }
 
-      if (Array.isArray(languages)) {
+      const names =
+        Array.isArray(languages)
+          ? languages.map(l => l?.name || l?.native_name || "")
+          : Object.values(languages).map(l =>
+              typeof l === "string" ? l : (l?.name || "")
+            );
 
-        return languages
-          .map(language =>
-            language.name ||
-            language.native_name ||
-            ""
-          )
-          .filter(Boolean)
-          .join(", ");
-
-      }
-
-      return Object.values(languages)
-        .map(language => {
-
-          if (typeof language === "string") {
-            return language;
-          }
-
-          return language.name || "";
-
-        })
+      return names
         .filter(Boolean)
+        .map(esc)
         .join(", ");
 
     }
