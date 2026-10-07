@@ -8,7 +8,12 @@ Open:  http://localhost:8000
 import json, os, urllib.error, urllib.parse, urllib.request
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 
-API_KEY = os.environ.get("RESTCOUNTRIES_KEY", "rc_live_173dd064cbcc4856825701ace94cab5c")
+FILE_KEY = "rc_live_173dd064cbcc4856825701ace94cab5c"
+ENV_KEY = os.environ.get("RESTCOUNTRIES_KEY")
+
+# Strip stray spaces / quotes / line breaks that often sneak into env vars
+API_KEY = (ENV_KEY or FILE_KEY).strip().strip("\"'").strip()
+KEY_SOURCE = "environment variable RESTCOUNTRIES_KEY" if ENV_KEY else "server.py"
 UPSTREAM = "https://api.restcountries.com/countries/v5"
 PORT = int(os.environ.get("PORT", "8000"))
 
@@ -38,6 +43,9 @@ class Handler(SimpleHTTPRequestHandler):
             status = 502
             body = json.dumps({"errors": [{"message": "Server could not reach REST Countries: %s" % e}]}).encode()
 
+        print("-> REST Countries answered HTTP %d  (key from %s: %s...%s)"
+              % (status, KEY_SOURCE, API_KEY[:8], API_KEY[-4:]))
+
         self.send_response(status)
         self.send_header("Content-Type", "application/json")
         self.send_header("Content-Length", str(len(body)))
@@ -46,5 +54,7 @@ class Handler(SimpleHTTPRequestHandler):
 
 
 if __name__ == "__main__":
+    print("Using key from %s: %s...%s (length %d, should be 40)"
+          % (KEY_SOURCE, API_KEY[:8], API_KEY[-4:], len(API_KEY)))
     print("Open http://localhost:%d" % PORT)
     ThreadingHTTPServer(("", PORT), Handler).serve_forever()
