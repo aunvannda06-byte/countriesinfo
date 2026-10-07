@@ -1,0 +1,1077 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <title>World Countries Database</title>
+
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: Arial, Helvetica, sans-serif;
+      background: #f5f7fb;
+      color: #172033;
+    }
+
+    /* =========================
+       HEADER
+    ========================= */
+
+    header {
+      background: #ffffff;
+      border-bottom: 1px solid #e5e7eb;
+      position: sticky;
+      top: 0;
+      z-index: 50;
+    }
+
+    .header-inner {
+      max-width: 1400px;
+      margin: auto;
+      padding: 18px 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 20px;
+    }
+
+    .logo {
+      font-size: 22px;
+      font-weight: 800;
+      color: #111827;
+    }
+
+    .logo span {
+      color: #2563eb;
+    }
+
+    .search-box {
+      width: 360px;
+    }
+
+    .search-box input {
+      width: 100%;
+      padding: 12px 16px;
+      border: 1px solid #d1d5db;
+      border-radius: 10px;
+      outline: none;
+      font-size: 14px;
+    }
+
+    .search-box input:focus {
+      border-color: #2563eb;
+    }
+
+    /* =========================
+       MAIN
+    ========================= */
+
+    main {
+      max-width: 1400px;
+      margin: auto;
+      padding: 30px 24px;
+    }
+
+    .page-title {
+      margin-bottom: 24px;
+    }
+
+    .page-title h1 {
+      font-size: 30px;
+      margin-bottom: 8px;
+    }
+
+    .page-title p {
+      color: #6b7280;
+      font-size: 14px;
+    }
+
+    /* =========================
+       COUNTRY GRID
+    ========================= */
+
+    .countries-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 20px;
+    }
+
+    .country-card {
+      background: #ffffff;
+      border: 1px solid #e5e7eb;
+      border-radius: 16px;
+      overflow: hidden;
+      transition: 0.2s ease;
+      cursor: pointer;
+    }
+
+    .country-card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+    }
+
+    .flag-container {
+      height: 150px;
+      background: #eef2f7;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+
+    .flag-container img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .country-content {
+      padding: 18px;
+    }
+
+    .country-name {
+      font-size: 18px;
+      font-weight: 700;
+      margin-bottom: 12px;
+    }
+
+    .country-meta {
+      display: grid;
+      gap: 7px;
+      font-size: 13px;
+    }
+
+    .meta-row {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+    }
+
+    .meta-label {
+      color: #6b7280;
+    }
+
+    .meta-value {
+      font-weight: 600;
+      text-align: right;
+    }
+
+    /* =========================
+       MODAL
+    ========================= */
+
+    .modal {
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.6);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      z-index: 100;
+    }
+
+    .modal.active {
+      display: flex;
+    }
+
+    .modal-content {
+      width: 100%;
+      max-width: 900px;
+      max-height: 90vh;
+      overflow-y: auto;
+      background: white;
+      border-radius: 20px;
+      position: relative;
+    }
+
+    .modal-header {
+      padding: 24px;
+      border-bottom: 1px solid #e5e7eb;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .modal-header h2 {
+      font-size: 24px;
+    }
+
+    .close-btn {
+      border: none;
+      background: #f3f4f6;
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
+      cursor: pointer;
+      font-size: 20px;
+    }
+
+    .detail-hero {
+      display: grid;
+      grid-template-columns: 300px 1fr;
+      gap: 30px;
+      padding: 25px;
+    }
+
+    .detail-flag {
+      width: 100%;
+      border-radius: 10px;
+      border: 1px solid #e5e7eb;
+    }
+
+    .detail-name {
+      font-size: 28px;
+      margin-bottom: 8px;
+    }
+
+    .official-name {
+      color: #6b7280;
+      margin-bottom: 20px;
+    }
+
+    .details-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 14px;
+      padding: 0 25px 25px;
+    }
+
+    .detail-item {
+      background: #f8fafc;
+      border-radius: 10px;
+      padding: 15px;
+    }
+
+    .detail-item strong {
+      display: block;
+      color: #6b7280;
+      font-size: 12px;
+      margin-bottom: 6px;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    .detail-item span {
+      font-size: 14px;
+      font-weight: 600;
+      word-break: break-word;
+    }
+
+    /* =========================
+       STATES
+    ========================= */
+
+    .loading,
+    .error,
+    .empty {
+      text-align: center;
+      padding: 60px 20px;
+      color: #6b7280;
+    }
+
+    .error {
+      color: #dc2626;
+    }
+
+    /* =========================
+       RESPONSIVE
+    ========================= */
+
+    @media (max-width: 700px) {
+
+      .header-inner {
+        flex-direction: column;
+        align-items: stretch;
+      }
+
+      .search-box {
+        width: 100%;
+      }
+
+      .detail-hero {
+        grid-template-columns: 1fr;
+      }
+
+      .details-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .page-title h1 {
+        font-size: 24px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- =========================
+       HEADER
+  ========================= -->
+
+  <header>
+    <div class="header-inner">
+
+      <div class="logo">
+        World<span>Countries</span>
+      </div>
+
+      <div class="search-box">
+        <input
+          type="text"
+          id="searchInput"
+          placeholder="Search country..."
+        />
+      </div>
+
+    </div>
+  </header>
+
+
+  <!-- =========================
+       MAIN
+  ========================= -->
+
+  <main>
+
+    <div class="page-title">
+      <h1>Countries of the World</h1>
+      <p id="countryCount">Loading countries...</p>
+    </div>
+
+    <div id="countriesContainer" class="countries-grid">
+      <div class="loading">
+        Loading country data...
+      </div>
+    </div>
+
+  </main>
+
+
+  <!-- =========================
+       COUNTRY DETAIL MODAL
+  ========================= -->
+
+  <div id="countryModal" class="modal">
+
+    <div class="modal-content">
+
+      <div class="modal-header">
+
+        <h2>Country Information</h2>
+
+        <button
+          class="close-btn"
+          onclick="closeModal()"
+        >
+          ×
+        </button>
+
+      </div>
+
+      <div id="countryDetails"></div>
+
+    </div>
+
+  </div>
+
+
+  <script>
+
+    /*
+      ==========================================
+      REST COUNTRIES API V5
+      ==========================================
+
+      Replace YOUR_API_KEY with your REST Countries
+      API key.
+
+      Current API:
+      https://api.restcountries.com/countries/v5
+
+      Authentication:
+      Authorization: Bearer YOUR_API_KEY
+    */
+
+    // The API key now lives on the server (server.py / Netlify Function),
+    // not in this page. The page only talks to its own /api/countries.
+    const API_BASE = "/api/countries";
+
+    // Free plan allows at most 100 records per request,
+    // so we page through the results with offset.
+    const PAGE_SIZE = 100;
+
+    // Cache for 24h so every page refresh does not use up
+    // your monthly request quota (free plan = 1,000 requests).
+    const CACHE_KEY = "worldcountries_cache_v1";
+    const CACHE_TTL = 24 * 60 * 60 * 1000;
+
+
+    let countries = [];
+    let visibleList = [];
+
+
+    /* ==========================================
+       FETCH ONE PAGE
+    ========================================== */
+
+    async function fetchPage(offset) {
+
+      const url =
+        `${API_BASE}?limit=${PAGE_SIZE}&offset=${offset}` +
+        `&response_fields_omit=names.translations`;
+
+      let response;
+
+      try {
+
+        response = await fetch(url);
+
+      } catch (networkError) {
+
+        throw new Error(
+          location.protocol === "file:"
+            ? "Open this page through the server (python server.py, then http://localhost:8000), not by double-clicking the file."
+            : "Cannot reach the server. Is it running?"
+        );
+
+      }
+
+      let body = null;
+
+      try {
+        body = await response.json();
+      } catch (e) {}
+
+      if (!response.ok) {
+        throw new Error(
+          body?.errors?.[0]?.message ||
+          `Request failed (HTTP ${response.status})`
+        );
+      }
+
+      return body.data;
+
+    }
+
+
+    /* ==========================================
+       FETCH ALL COUNTRIES (with pagination + cache)
+    ========================================== */
+
+    async function fetchAllCountries() {
+
+      try {
+
+        const cached =
+          JSON.parse(localStorage.getItem(CACHE_KEY) || "null");
+
+        if (
+          cached &&
+          Date.now() - cached.time < CACHE_TTL &&
+          cached.items?.length
+        ) {
+          return cached.items;
+        }
+
+      } catch (e) {}
+
+
+      let all = [];
+      let offset = 0;
+      let more = true;
+
+      while (more) {
+
+        const data = await fetchPage(offset);
+        const items = data?.objects || [];
+
+        all = all.concat(items);
+
+        more = Boolean(data?.meta?.more) && items.length > 0;
+        offset += PAGE_SIZE;
+
+      }
+
+
+      try {
+        localStorage.setItem(
+          CACHE_KEY,
+          JSON.stringify({ time: Date.now(), items: all })
+        );
+      } catch (e) {}
+
+      return all;
+
+    }
+
+
+    /* ==========================================
+       LOAD COUNTRIES
+    ========================================== */
+
+    async function loadCountries() {
+
+      const container =
+        document.getElementById("countriesContainer");
+
+      try {
+
+        countries = await fetchAllCountries();
+
+        document.getElementById(
+          "countryCount"
+        ).textContent =
+          `${countries.length} countries available`;
+
+        renderCountries(countries);
+
+      } catch (error) {
+
+        console.error(error);
+
+        document.getElementById(
+          "countryCount"
+        ).textContent = "";
+
+        container.innerHTML = `
+          <div class="error">
+            <h3>Unable to load countries</h3>
+            <p>${error.message}</p>
+          </div>
+        `;
+
+      }
+
+    }
+
+
+    /* ==========================================
+       RENDER COUNTRY CARDS
+    ========================================== */
+
+    function renderCountries(list) {
+
+      visibleList = list;
+
+      const container =
+        document.getElementById(
+          "countriesContainer"
+        );
+
+      if (!list.length) {
+
+        container.innerHTML = `
+          <div class="empty">
+            No countries found.
+          </div>
+        `;
+
+        return;
+      }
+
+
+      container.innerHTML =
+        list.map((country, index) => {
+
+          const name =
+            country.names?.common ||
+            "Unknown";
+
+          const flag =
+            country.flag?.url_png ||
+            country.flag?.url_svg ||
+            "";
+
+          const capital =
+            country.capitals?.[0]?.name ||
+            "—";
+
+          const region =
+            country.region ||
+            "—";
+
+          const code =
+            country.codes?.alpha_2 ||
+            "—";
+
+          return `
+
+            <div
+              class="country-card"
+              onclick="openCountry(${index})"
+            >
+
+              <div class="flag-container">
+
+                ${
+                  flag
+                  ? `<img
+                      src="${flag}"
+                      alt="${name} flag"
+                    >`
+                  : `<span>${country.flag?.emoji || ""}</span>`
+                }
+
+              </div>
+
+
+              <div class="country-content">
+
+                <div class="country-name">
+                  ${name}
+                </div>
+
+
+                <div class="country-meta">
+
+                  <div class="meta-row">
+                    <span class="meta-label">
+                      ISO
+                    </span>
+
+                    <span class="meta-value">
+                      ${code}
+                    </span>
+                  </div>
+
+
+                  <div class="meta-row">
+                    <span class="meta-label">
+                      Capital
+                    </span>
+
+                    <span class="meta-value">
+                      ${capital}
+                    </span>
+                  </div>
+
+
+                  <div class="meta-row">
+                    <span class="meta-label">
+                      Region
+                    </span>
+
+                    <span class="meta-value">
+                      ${region}
+                    </span>
+                  </div>
+
+                </div>
+
+              </div>
+
+            </div>
+
+          `;
+
+        }).join("");
+
+    }
+
+
+    /* ==========================================
+       COUNTRY DETAILS
+    ========================================== */
+
+    function openCountry(index) {
+
+      const country = visibleList[index];
+
+      if (!country) {
+        return;
+      }
+
+      const modal =
+        document.getElementById(
+          "countryModal"
+        );
+
+      const details =
+        document.getElementById(
+          "countryDetails"
+        );
+
+
+      const name =
+        country.names?.common || "—";
+
+      const officialName =
+        country.names?.official || "—";
+
+      const flag =
+        country.flag?.url_png ||
+        country.flag?.url_svg ||
+        "";
+
+      const alpha2 =
+        country.codes?.alpha_2 || "—";
+
+      const alpha3 =
+        country.codes?.alpha_3 || "—";
+
+      const numeric =
+        country.codes?.ccn3 || "—";
+
+      const capital =
+        country.capitals
+          ?.map(c => c.name)
+          .join(", ") || "—";
+
+      const region =
+        country.region || "—";
+
+      const subregion =
+        country.subregion || "—";
+
+      const area =
+        country.area?.kilometers
+          ? `${country.area.kilometers.toLocaleString()} km²`
+          : "—";
+
+      const currency =
+        formatCurrencies(
+          country.currencies
+        );
+
+      const callingCode =
+        country.calling_codes
+          ?.map(code => `+${code}`)
+          .join(", ") || "—";
+
+      const languages =
+        formatLanguages(
+          country.languages
+        );
+
+      const timezones =
+        country.timezones
+          ?.join(", ") || "—";
+
+      const postalFormat =
+        country.postal_code?.format ||
+        "No postal code format available";
+
+      const postalRegex =
+        country.postal_code?.regex ||
+        "—";
+
+
+      details.innerHTML = `
+
+        <div class="detail-hero">
+
+          ${
+            flag
+            ? `
+              <img
+                class="detail-flag"
+                src="${flag}"
+                alt="${name} flag"
+              >
+            `
+            : `
+              <div class="detail-flag">
+                ${country.flag?.emoji || ""}
+              </div>
+            `
+          }
+
+
+          <div>
+
+            <h1 class="detail-name">
+              ${name}
+            </h1>
+
+            <p class="official-name">
+              ${officialName}
+            </p>
+
+            <p>
+              ${country.flag?.emoji || ""}
+              ${alpha2}
+            </p>
+
+          </div>
+
+        </div>
+
+
+        <div class="details-grid">
+
+
+          <div class="detail-item">
+            <strong>ISO Alpha-2</strong>
+            <span>${alpha2}</span>
+          </div>
+
+
+          <div class="detail-item">
+            <strong>ISO Alpha-3</strong>
+            <span>${alpha3}</span>
+          </div>
+
+
+          <div class="detail-item">
+            <strong>ISO Numeric</strong>
+            <span>${numeric}</span>
+          </div>
+
+
+          <div class="detail-item">
+            <strong>Capital</strong>
+            <span>${capital}</span>
+          </div>
+
+
+          <div class="detail-item">
+            <strong>Region</strong>
+            <span>${region}</span>
+          </div>
+
+
+          <div class="detail-item">
+            <strong>Subregion</strong>
+            <span>${subregion}</span>
+          </div>
+
+
+          <div class="detail-item">
+            <strong>Area</strong>
+            <span>${area}</span>
+          </div>
+
+
+          <div class="detail-item">
+            <strong>Currency</strong>
+            <span>${currency}</span>
+          </div>
+
+
+          <div class="detail-item">
+            <strong>Calling Code</strong>
+            <span>${callingCode}</span>
+          </div>
+
+
+          <div class="detail-item">
+            <strong>Languages</strong>
+            <span>${languages}</span>
+          </div>
+
+
+          <div class="detail-item">
+            <strong>Time Zones</strong>
+            <span>${timezones}</span>
+          </div>
+
+
+          <div class="detail-item">
+            <strong>Postal Code Format</strong>
+            <span>${postalFormat}</span>
+          </div>
+
+
+          <div class="detail-item">
+            <strong>Postal Code Regex</strong>
+            <span>${postalRegex}</span>
+          </div>
+
+
+        </div>
+
+      `;
+
+
+      modal.classList.add("active");
+
+    }
+
+
+    /* ==========================================
+       CURRENCY FORMATTER
+    ========================================== */
+
+    function formatCurrencies(currencies) {
+
+      if (!currencies) {
+        return "—";
+      }
+
+      return Object.entries(currencies)
+        .map(([code, currency]) => {
+
+          const name =
+            currency.name || "";
+
+          const symbol =
+            currency.symbol
+              ? ` (${currency.symbol})`
+              : "";
+
+          return `${name} — ${code}${symbol}`;
+
+        })
+        .join("<br>");
+
+    }
+
+
+    /* ==========================================
+       LANGUAGE FORMATTER
+    ========================================== */
+
+    function formatLanguages(languages) {
+
+      if (!languages) {
+        return "—";
+      }
+
+      if (Array.isArray(languages)) {
+
+        return languages
+          .map(language =>
+            language.name ||
+            language.native_name ||
+            ""
+          )
+          .filter(Boolean)
+          .join(", ");
+
+      }
+
+      return Object.values(languages)
+        .map(language => {
+
+          if (typeof language === "string") {
+            return language;
+          }
+
+          return language.name || "";
+
+        })
+        .filter(Boolean)
+        .join(", ");
+
+    }
+
+
+    /* ==========================================
+       SEARCH
+    ========================================== */
+
+    document
+      .getElementById("searchInput")
+      .addEventListener(
+        "input",
+        function () {
+
+          const keyword =
+            this.value
+              .toLowerCase()
+              .trim();
+
+
+          const filtered =
+            countries.filter(country => {
+
+              const name =
+                country.names?.common
+                  ?.toLowerCase() || "";
+
+              const official =
+                country.names?.official
+                  ?.toLowerCase() || "";
+
+              const alpha2 =
+                country.codes?.alpha_2
+                  ?.toLowerCase() || "";
+
+              const alpha3 =
+                country.codes?.alpha_3
+                  ?.toLowerCase() || "";
+
+
+              return (
+                name.includes(keyword) ||
+                official.includes(keyword) ||
+                alpha2.includes(keyword) ||
+                alpha3.includes(keyword)
+              );
+
+            });
+
+
+          document.getElementById(
+            "countryCount"
+          ).textContent =
+            `${filtered.length} countries found`;
+
+
+          renderCountries(filtered);
+
+        }
+      );
+
+
+    /* ==========================================
+       CLOSE MODAL
+    ========================================== */
+
+    function closeModal() {
+
+      document
+        .getElementById("countryModal")
+        .classList.remove("active");
+
+    }
+
+
+    /* Close when clicking outside */
+
+    document
+      .getElementById("countryModal")
+      .addEventListener(
+        "click",
+        function (event) {
+
+          if (event.target === this) {
+            closeModal();
+          }
+
+        }
+      );
+
+
+    /* ESC key */
+
+    document.addEventListener(
+      "keydown",
+      function (event) {
+
+        if (event.key === "Escape") {
+          closeModal();
+        }
+
+      }
+    );
+
+
+    /* ==========================================
+       START
+    ========================================== */
+
+    loadCountries();
+
+  </script>
+
+</body>
+</html>
